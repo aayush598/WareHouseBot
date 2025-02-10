@@ -86,5 +86,5 @@ def get_bot_data():
     
     return jsonify([{**{"id": bot_id}, **data} for bot_id, data in bot_positions.items()])
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# if __name__ == '__main__':
+#     app.run(debug=True)
