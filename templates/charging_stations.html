@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-center mb-4 text-white">Find EV Charging Stations</h1>
+    <p class="text-lg text-gray-400 text-center mb-6">
+        Click anywhere on the map to discover nearby charging stations.
+    </p>
+
+    <div class="relative w-full h-[600px] rounded-lg shadow-lg border border-gray-700 bg-gray-900">
+        <!-- Map Section -->
+        <div id="map" class="absolute inset-0 z-0 rounded-lg"></div>
+
+        <!-- Floating Sidebar -->
+        <div id="stationList" class="absolute top-4 left-4 w-72 bg-gray-800 shadow-xl rounded-lg p-4 max-h-[90%] overflow-auto hidden border border-gray-600">
+            <h2 class="text-xl font-bold text-white mb-2">Nearby Stations</h2>
+            <ul id="stations" class="space-y-2"></ul>
+        </div>
+    </div>
+
+    <!-- Reset Button -->
+    <div class="flex justify-center mt-6">
+        <button id="resetBtn" class="px-5 py-2 bg-red-600 text-white text-lg font-semibold rounded-lg hover:bg-red-700 shadow-md transition duration-200">
+            Reset
+        </button>
+    </div>
+</div>
+
+<!-- Leaflet.js for map rendering -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const map = L.map('map').setView([37.7749, -122.4194], 12); // Default location: San Francisco
+    const resetBtn = document.getElementById("resetBtn");
+    const stationList = document.getElementById("stationList");
+    const stationsUl = document.getElementById("stations");
+
+    // Load OpenStreetMap tiles (Dark Mode)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let markers = [];
+
+    // Dummy charging station data
+    const chargingStations = [
+        { name: "Tesla Supercharger", lat: 37.775, lon: -122.418, type: "Fast Charging", availability: "4/6 Available" },
+        { name: "EVgo Station", lat: 37.785, lon: -122.409, type: "DC Fast", availability: "2/4 Available" },
+        { name: "ChargePoint", lat: 37.764, lon: -122.429, type: "Level 2", availability: "6/6 Available" }
+    ];
+
+    function findNearbyStations(lat, lon) {
+        markers.forEach(marker => map.removeLayer(marker)); // Clear previous markers
+        markers = [];
+        stationsUl.innerHTML = "";
+        stationList.classList.remove("hidden");
+
+        chargingStations.forEach(station => {
+            const distance = Math.sqrt((station.lat - lat) ** 2 + (station.lon - lon) ** 2);
+            if (distance < 0.1) { // Approximate threshold for nearby stations
+                const marker = L.circleMarker([station.lat, station.lon], {
+                    color: "#4ADE80",  // Neon green
+                    fillColor: "#16A34A",
+                    fillOpacity: 0.9,
+                    radius: 10
+                }).addTo(map)
+                .bindPopup(`
+                    <div class="text-lg font-bold text-white">${station.name}</div>
+                    <div class="text-gray-300">${station.type}</div>
+                    <div class="text-green-400 font-semibold">${station.availability}</div>
+                `)
+                .openPopup();
+                
+                markers.push(marker);
+
+                // Add station to sidebar list
+                const li = document.createElement("li");
+                li.classList.add("p-2", "bg-gray-700", "rounded-lg", "shadow-sm", "cursor-pointer", "hover:bg-gray-600", "text-white", "transition", "duration-200");
+                li.innerHTML = `<strong>${station.name}</strong> - ${station.type} <br> <span class="text-green-400">${station.availability}</span>`;
+                li.addEventListener("click", () => map.setView([station.lat, station.lon], 14));
+                stationsUl.appendChild(li);
+            }
+        });
+
+        if (markers.length === 0) {
+            stationList.classList.add("hidden");
+            alert("No charging stations found nearby.");
+        }
+    }
+
+    map.on("click", function (event) {
+        findNearbyStations(event.latlng.lat, event.latlng.lng);
+    });
+
+    resetBtn.addEventListener("click", function () {
+        markers.forEach(marker => map.removeLayer(marker));
+        markers = [];
+        stationList.classList.add("hidden");
+    });
+});
+</script>
+{% endblock %}

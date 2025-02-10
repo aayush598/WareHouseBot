@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Bot Tracking | Warehouse Automation{% endblock %}
+
+{% block content %}
+<div class="p-6 min-h-screen bg-gray-900 text-gray-200">
+    <!-- Page Header -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Bot Tracking</h1>
+        <span class="text-gray-400">📍 Real-time Location Monitoring</span>
+    </div>
+
+    <!-- Bot Status Table -->
+    <div class="bg-gray-800 shadow-md p-6 rounded-lg">
+        <h2 class="text-2xl font-semibold mb-4">Bot Status Overview</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse border border-gray-700">
+                <thead>
+                    <tr class="bg-gray-700 text-gray-300">
+                        <th class="border border-gray-600 p-3 text-left">Bot ID</th>
+                        <th class="border border-gray-600 p-3 text-left">Location</th>
+                        <th class="border border-gray-600 p-3 text-left">Battery</th>
+                        <th class="border border-gray-600 p-3 text-left">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for bot in bots %}
+                    <tr class="hover:bg-gray-700">
+                        <td class="border border-gray-600 p-3">{{ bot.id }}</td>
+                        <td class="border border-gray-600 p-3">{{ bot.lat, bot.lng }}</td>
+                        <td class="border border-gray-600 p-3">
+                            <span class="px-2 py-1 rounded-full text-white 
+                                {% if bot.battery > 50 %} bg-green-500 
+                                {% elif bot.battery > 20 %} bg-yellow-500 
+                                {% else %} bg-red-500 {% endif %}">
+                                {{ bot.battery }}%
+                            </span>
+                        </td>
+                        <td class="border border-gray-600 p-3">{{ bot.status }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Map Section -->
+    <div class="bg-gray-800 shadow-md p-6 rounded-lg mt-6">
+        <h2 class="text-2xl font-semibold mb-4 text-gray-300">Warehouse Map</h2>
+        <div id="map" class="h-96 w-full bg-gray-700 rounded-lg"></div>
+    </div>
+</div>
+
+<!-- Leaflet.js for Interactive Map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script type="application/json" id="botData">
+    {{ bots | tojson | safe }}
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var map = L.map('map').setView([37.7749, -122.4194], 15); // Default center
+
+        // Dark-themed tile layer
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        var botMarkers = {};  // Store bot markers
+        var botPaths = {};  // Store bot planned paths
+        var traveledPaths = {};  // Store traveled paths
+
+        function updateBotMovement() {
+            fetch('/bot-move')  // Fetch updated bot positions
+                .then(response => response.json())
+                .then(data => {
+                    data.bots.forEach(bot => {
+                        var botId = bot.id;
+                        var botPosition = bot.current_position;
+                        var botPath = bot.path;
+
+                        // Remove old planned path and draw new path
+                        if (botPaths[botId]) map.removeLayer(botPaths[botId]);
+                        botPaths[botId] = L.polyline(botPath, { color: 'blue', dashArray: '5, 10' }).addTo(map);
+
+                        // Update or create bot marker
+                        if (!botMarkers[botId]) {
+                            botMarkers[botId] = L.marker(botPosition, { title: `Bot ${botId}` }).addTo(map)
+                                .bindPopup(`<b>Bot ${botId}</b><br>Battery: 80%`);
+                        } else {
+                            botMarkers[botId].setLatLng(botPosition);
+                        }
+
+                        // Draw traveled path for each bot
+                        if (!traveledPaths[botId]) {
+                            traveledPaths[botId] = L.polyline([], { color: 'red' }).addTo(map);
+                        }
+                        traveledPaths[botId].addLatLng(botPosition);
+                    });
+                })
+                .catch(error => console.error('Error fetching bot data:', error));
+        }
+
+        setInterval(updateBotMovement, 1000); // Update bot positions every second
+        updateBotMovement(); // Initial update
+    });
+</script>
+
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center mb-6">Path Planning with A* Algorithm</h1>
+    
+    <p class="text-lg text-gray-600 text-center mb-4">
+        Click on any two points to set the start and goal. The A* algorithm will compute the shortest path.
+    </p>
+
+    <div class="flex justify-center">
+        <canvas id="pathCanvas" class="border rounded-lg shadow-lg"></canvas>
+    </div>
+
+    <div class="flex justify-center mt-6 space-x-4">
+        <button id="resetBtn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+            Reset
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const canvas = document.getElementById("pathCanvas");
+    const ctx = canvas.getContext("2d");
+    const rows = 20;
+    const cols = 30;
+    const cellSize = 25;
+    let grid = [];
+    let startNode = null;
+    let goalNode = null;
+    
+    canvas.width = cols * cellSize;
+    canvas.height = rows * cellSize;
+
+    function createGrid() {
+        grid = [];
+        for (let i = 0; i < rows; i++) {
+            let row = [];
+            for (let j = 0; j < cols; j++) {
+                row.push({ x: j, y: i, isWall: Math.random() < 0.2, parent: null });
+            }
+            grid.push(row);
+        }
+        startNode = null;
+        goalNode = null;
+        drawGrid();
+    }
+
+    function drawGrid() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                ctx.fillStyle = grid[i][j].isWall ? "black" : "white";
+                ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+                ctx.strokeRect(j * cellSize, i * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+
+    function heuristic(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
+    function getNeighbors(node) {
+        let { x, y } = node;
+        let neighbors = [];
+        let directions = [
+            { dx: 0, dy: -1 }, { dx: 0, dy: 1 },
+            { dx: -1, dy: 0 }, { dx: 1, dy: 0 }
+        ];
+        for (let d of directions) {
+            let nx = x + d.dx;
+            let ny = y + d.dy;
+            if (nx >= 0 && nx < cols && ny >= 0 && ny < rows && !grid[ny][nx].isWall) {
+                neighbors.push(grid[ny][nx]);
+            }
+        }
+        return neighbors;
+    }
+
+    function aStar(start, goal) {
+        let openSet = [start];
+        let closedSet = [];
+        let gScore = {};
+        let fScore = {};
+
+        gScore[`${start.x},${start.y}`] = 0;
+        fScore[`${start.x},${start.y}`] = heuristic(start, goal);
+
+        while (openSet.length > 0) {
+            openSet.sort((a, b) => fScore[`${a.x},${a.y}`] - fScore[`${b.x},${b.y}`]);
+            let current = openSet.shift();
+
+            if (current === goal) {
+                drawPath(goal);
+                return;
+            }
+
+            closedSet.push(current);
+
+            for (let neighbor of getNeighbors(current)) {
+                if (closedSet.includes(neighbor)) continue;
+
+                let tentativeGScore = gScore[`${current.x},${current.y}`] + 1;
+                if (!openSet.includes(neighbor) || tentativeGScore < gScore[`${neighbor.x},${neighbor.y}`]) {
+                    neighbor.parent = current;
+                    gScore[`${neighbor.x},${neighbor.y}`] = tentativeGScore;
+                    fScore[`${neighbor.x},${neighbor.y}`] = gScore[`${neighbor.x},${neighbor.y}`] + heuristic(neighbor, goal);
+                    if (!openSet.includes(neighbor)) openSet.push(neighbor);
+                }
+            }
+        }
+    }
+
+    function drawPath(goal) {
+        let current = goal;
+        while (current.parent) {
+            ctx.fillStyle = "blue";
+            ctx.fillRect(current.x * cellSize, current.y * cellSize, cellSize, cellSize);
+            current = current.parent;
+        }
+    }
+
+    canvas.addEventListener("click", function (event) {
+        let rect = canvas.getBoundingClientRect();
+        let x = Math.floor((event.clientX - rect.left) / cellSize);
+        let y = Math.floor((event.clientY - rect.top) / cellSize);
+
+        if (!startNode) {
+            startNode = grid[y][x];
+            startNode.isWall = false;
+            ctx.fillStyle = "green";
+        } else if (!goalNode) {
+            goalNode = grid[y][x];
+            goalNode.isWall = false;
+            ctx.fillStyle = "red";
+            aStar(startNode, goalNode);
+        }
+
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", function () {
+        createGrid();
+    });
+
+    createGrid();
+});
+</script>
+{% endblock %}

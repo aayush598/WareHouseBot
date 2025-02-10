@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Collision Avoidance{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-center text-white mb-6">Collision Avoidance System</h1>
+
+    <p class="text-lg text-white mb-4 text-center">
+        The Collision Avoidance System helps in detecting obstacles and preventing potential collisions using advanced sensor technologies.
+    </p>
+
+    <div class="mt-6">
+        <h2 class="text-2xl font-semibold text-white">How It Works</h2>
+        <p class="text-white mt-2">
+            The system uses ultrasonic, LiDAR, and camera-based sensors to continuously scan the environment. When an obstacle is detected, the system takes corrective actions such as slowing down or stopping the vehicle to prevent a collision.
+        </p>
+    </div>
+
+    <div class="mt-6">
+        <h2 class="text-2xl font-semibold text-white">Key Features</h2>
+        <ul class="list-disc list-inside text-white mt-2">
+            <li>Real-time obstacle detection</li>
+            <li>Automatic braking and slowdown</li>
+            <li>360-degree coverage using multi-sensors</li>
+            <li>Integration with autonomous driving systems</li>
+            <li>Customizable sensitivity levels</li>
+        </ul>
+    </div>
+
+    <div class="mt-6">
+        <h2 class="text-2xl font-semibold text-white">Applications</h2>
+        <p class="text-white mt-2">
+            This technology is widely used in autonomous vehicles, industrial robots, drones, and safety monitoring systems.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Automation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Sidebar -->
+    <div class="flex">
+        <nav class="w-64 h-screen bg-gray-800 p-4 fixed">
+            <h1 class="text-xl font-bold text-center mb-6">Warehouse Automation</h1>
+            
+            <!-- Bot Selection Dropdown -->
+            <div class="mb-4">
+                <label for="bot-select" class="block text-sm font-medium">Select Bot</label>
+                <select id="bot-select" class="w-full p-2 bg-gray-700 text-white rounded">
+                    <option value="bot1">Bot 1</option>
+                    <option value="bot2">Bot 2</option>
+                    <option value="bot3">Bot 3</option>
+                    <option value="bot4">Bot 4</option>
+                </select>
+            </div>
+
+            <!-- Sidebar Navigation -->
+            <ul class="space-y-2">
+                <li class="p-3 hover:bg-gray-700 transition-all {% if request.path == url_for('dashboard') %}bg-gray-700{% endif %}">
+                    <a href="{{ url_for('dashboard') }}" class="flex items-center space-x-2">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="p-3 hover:bg-gray-700 transition-all {% if request.path == url_for('bot_tracking') %}bg-gray-700{% endif %}">
+                    <a href="{{ url_for('bot_tracking') }}" class="flex items-center space-x-2">
+                        <i data-lucide="map" class="w-5 h-5"></i>
+                        <span>Bot Tracking</span>
+                    </a>
+                </li>
+                <li class="p-3 hover:bg-gray-700 transition-all {% if request.path == url_for('path_planning') %}bg-gray-700{% endif %}">
+                    <a href="{{ url_for('path_planning') }}" class="flex items-center space-x-2">
+                        <i data-lucide="route" class="w-5 h-5"></i>
+                        <span>Path Planning</span>
+                    </a>
+                </li>
+                <li class="p-3 hover:bg-gray-700 transition-all {% if request.path == url_for('charging_stations') %}bg-gray-700{% endif %}">
+                    <a href="{{ url_for('charging_stations') }}" class="flex items-center space-x-2">
+                        <i data-lucide="battery-charging" class="w-5 h-5"></i>
+                        <span>Charging Stations</span>
+                    </a>
+                </li>
+                <li class="p-3 hover:bg-gray-700 transition-all {% if request.path == url_for('collision_avoidance') %}bg-gray-700{% endif %}">
+                    <a href="{{ url_for('collision_avoidance') }}" class="flex items-center space-x-2">
+                        <i data-lucide="shield-alert" class="w-5 h-5"></i>
+                        <span>Collision Avoidance</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="ml-64 flex-1 p-6">
+            <header class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold">Welcome to Warehouse Automation</h2>
+                <button class="bg-gray-700 px-4 py-2 rounded hover:bg-gray-600 transition">Logout</button>
+            </header>
+
+            <!-- Dynamic Page Content -->
+            <main>
+                {% block content %}
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
